@@ -1,4 +1,4 @@
-influxdb-client
+python-logging-loki
 pymongo
 sickle
 xmltodict

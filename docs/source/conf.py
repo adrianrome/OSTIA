@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Open Science Toolkit Information Access'
-copyright = '2024, Omar Briqa'
-author = 'Omar Briqa'
+copyright = '2024, Omar Briqa, Adrián Romera'
+author = 'Omar Briqa, Adrián Romera'
 release = '0.1'
 
 # -- General configuration ---------------------------------------------------

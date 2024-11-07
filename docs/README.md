@@ -38,7 +38,7 @@ export PYTHONPATH=../
 Set the test environment variables needed in certain modules.
 
 ```shell
-export $(xargs < .env_test)
+export $(xargs < .env)
 ```
 
 # Generate and read the documentation

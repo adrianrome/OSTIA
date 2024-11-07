@@ -1,51 +1,51 @@
 networks:
   monitoring:
 
+
 services:
-  influxdb:
-    image: influxdb:2.6-alpine
-    env_file:
-      - ./influxdb/influxv2.env
-    volumes:
-      - influxdbv2:/var/lib/influxdb2:rw
+  loki:
+    image: grafana/loki:latest
     ports:
-      - 8086:8086
-    networks:
-      - monitoring
-  telegraf:
-    image: telegraf:1.25-alpine
-    depends_on:
-      - influxdb
+      - 3100:3100
     volumes:
-      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-    env_file:
-      - ./influxdb/influxv2.env
+      - ./loki/loki-local-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - monitoring
   grafana:
-    image: grafana/grafana:10.4.2
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy 
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        - name: Infinity
+          type: infinity
+        EOF
+        /run.sh
+    image: grafana/grafana:latest
     ports:
       - 3000:3000
-    networks:
-      - monitoring
-  mongo:
-    image: mongo:4.4.6
-    restart: always
-    ports:
-      - 27017:27017
-    env_file:
-      - ./mongo/mongo.env
-    networks:
-      - monitoring
-  mongo-express:
-    image: mongo-express:latest
-    restart: always
-    ports:
-      - 8081:8081
-    env_file:
-      - ./mongo/mongo_express.env
+    volumes:
+      - /mnt/c/Users/arome/Documents/GitHub/OSTIA/metadata:/var/lib/grafana/json
     networks:
       - monitoring
 
 volumes:
-  influxdbv2:
+  loki_data:

@@ -27,9 +27,10 @@ class MongoDbForwarder(IForwarder):
         :return: Status code of the action.
         :rtype: int
         """
-
+        print(f"Forwarding metadata from path: {metadata_path}")
         collection = cls._get_mongodb_collection()
         metadata_list = cls._preprocess_metadata(metadata_path)
+        print(f"Metadata list to insert: {metadata_list}")
         collection.insert_many(metadata_list)
 
         return 0
@@ -41,6 +42,7 @@ class MongoDbForwarder(IForwarder):
 
         :return: None
         """
+        print("Closing MongoDB client")
         if cls.mongoDbClient is not None:
             cls.mongoDbClient.close()
 
@@ -54,6 +56,7 @@ class MongoDbForwarder(IForwarder):
         :return: List of metadata entries where the key does NOT contain a dot (.).
         :rtype: list
         """
+        print(f"Preprocessing metadata from path: {metadata_path}")
         with open(metadata_path, 'r', encoding='utf-8') as file:
             metadata_list = json.load(file)
             for metadata in metadata_list:
@@ -63,6 +66,7 @@ class MongoDbForwarder(IForwarder):
                         updated_key = key.replace('.', '-')
                         updated_metadata[updated_key] = value
                     metadata['metadata'] = updated_metadata
+        print(f"Preprocessed metadata list: {metadata_list}")
         return metadata_list
 
     @classmethod
@@ -72,6 +76,7 @@ class MongoDbForwarder(IForwarder):
 
         :return: None
         """
+        print("Getting MongoDB credentials from environment variables")
         cls.mongodb_url = os.environ.get('MONGODB_URL')
         cls.mongodb_database_name = os.environ.get('MONGODB_DATABASE')
         cls.mongodb_collection_name = os.environ.get('MONGODB_COLLECTION')
@@ -86,6 +91,7 @@ class MongoDbForwarder(IForwarder):
         """
         if cls.mongoDbClient is None:
             cls._get_mongodb_credentials()
+            print(f"Connecting to MongoDB at {cls.mongodb_url}")
             cls.mongoDbClient = MongoClient(cls.mongodb_url)
             cls.mongoDbCollection = cls.mongoDbClient[cls.mongodb_database_name][cls.mongodb_collection_name]
 

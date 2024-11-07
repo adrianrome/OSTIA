@@ -16,12 +16,18 @@ import json
 import time
 import xmltodict
 from pathlib import Path
+import requests
 
 
 def process_metadata_batch(client: OAIClient, resumptionToken: str | None, batch: int) -> tuple[str, int]:
-
+    print(f"Processing metadata batch {batch} with resumptionToken: {resumptionToken}")
     metadataList = []
-    records, resumption_token = client.get_records(resumptionToken=resumptionToken)
+    try:
+        records, resumption_token = client.get_records(resumptionToken=resumptionToken)
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+        return None, 0
+    print(f"Received records: {records}, resumption_token: {resumption_token}")
 
     endOfRecords = SIZE_RECORDS_LIST
     while endOfRecords > 0:
@@ -33,6 +39,7 @@ def process_metadata_batch(client: OAIClient, resumptionToken: str | None, batch
             break
 
         data = xmltodict.parse(str(record))['record']
+        print(f"Parsed record: {data}")
 
         if not RecordDeleted.filter(data):
 
@@ -47,16 +54,18 @@ def process_metadata_batch(client: OAIClient, resumptionToken: str | None, batch
                 'metadata': DimParser.parse(metadata_list)[0]
             }
             metadataList.append(metadata)
+            print(f"Appended metadata: {metadata}")
 
         endOfRecords = endOfRecords - 1
 
     FileSystemForwarder.forward(metadata_list=metadataList, batch=(batch * int(SIZE_RECORDS_LIST)))
+    print(f"Forwarded metadata list: {metadataList}")
 
     return resumption_token, len(metadataList)
 
 
 def get_metadata(client: OAIClient) -> dict:
-
+    print("Starting metadata retrieval")
     stats = {'n_metadata': 0, 'time': 0}
 
     iteration = 0
@@ -64,6 +73,7 @@ def get_metadata(client: OAIClient) -> dict:
     resumptionToken = None
     while not emptyMetadata:
         resumptionToken, total_metadata = process_metadata_batch(client, resumptionToken=resumptionToken, batch=iteration)
+        print(f"Batch {iteration} processed, total metadata: {total_metadata}")
 
         stats['n_metadata'] = stats['n_metadata'] + total_metadata
         if iteration % 100:
@@ -76,15 +86,16 @@ def get_metadata(client: OAIClient) -> dict:
 
 
 def process_metadata() -> float:
-
+    print("Processing metadata from filesystem")
     base_path = Path(os.environ.get('METADATA_OUTPUT_PATH'))
 
     start_time = time.time()
     for batch in base_path.iterdir():
-        print(str(batch.name))
+        print(f"Processing batch: {batch.name}")
         if batch.is_dir():
             for metadata_file in batch.iterdir():
                 if re.match(pattern=r'.*\/\d+_\d+\.metadata.json', string=str(metadata_file)):
+                    print(f"Forwarding metadata file: {metadata_file}")
                     MongoDbForwarder.forward(metadata_file)
     MongoDbForwarder.close()
     end_time = time.time()
@@ -92,7 +103,7 @@ def process_metadata() -> float:
     return end_time - start_time
 
 def main():
-
+    print("Starting main process")
     METADATA_IN_SYSTEM = int(os.environ.get('METADATA_IN_SYSTEM'))
 
     if not METADATA_IN_SYSTEM:
@@ -104,6 +115,9 @@ def main():
 
         start_time = time.time()
         stats = get_metadata(client=client)
+        if stats is None:
+            print("Failed to retrieve metadata due to HTTP error.")
+            return
         end_time = time.time()
 
         stats['time'] = (end_time - start_time)
@@ -112,3 +126,6 @@ def main():
     else:
         t = process_metadata()
         print(f'time: {t}')
+
+if __name__ == "__main__":
+    main()

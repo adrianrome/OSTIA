@@ -5,7 +5,6 @@ from src.logs.filter.with_ipv6address import WithIPv6Address
 from src.logs.filter.without_ipaddress import WithoutIpAddress
 from src.logs.filter.access_resource_bitstream import AccessResourceBitstream
 
-
 from src.logs.transformer.to_json import ToJSON
 from src.logs.transformer.add_label import AddLabel
 from src.logs.transformer.add_timestamp import AddTimestamp
@@ -13,7 +12,7 @@ from src.logs.transformer.remove_ipv6address import RemoveIPv6Address
 from src.logs.transformer.add_resource_id_label import AddResourceIdLabel
 from src.logs.transformer.add_default_ipaddress import AddDefaultIpAddress
 
-from src.logs.forwarder.influxdb_forwarder import InfluxDbForwarder
+from src.logs.forwarder.loki_forwarder import LokiForwarder
 
 from src.logs.utils.constants import LABEL_VALUE
 from src.logs.utils.constants import LABEL_TYPE, LABEL_TYPE_OTHERS, LABEL_TYPE_SEARCH, LABEL_TYPE_RESOURCE, LABEL_TYPE_RESOURCE_WEB
@@ -22,38 +21,34 @@ from src.logs.utils.constants import LABEL_CONTENT, LABEL_CONTENT_OK, LABEL_CONT
 import os
 import json
 import time
+import gzip
 from pathlib import Path
 
+YEAR_START = 2006
+YEAR_END = 2023
+BATCH_SIZE = 1000
+INPUT_PATH = os.environ.get('LOGS_OUTPUT_PATH', '').strip()
 
-def process_log(line: str) -> dict:
-
+def process_log(line: str) -> tuple[dict, dict]:
     log = {}
     stats = {}
 
     if WithoutIpAddress.filter(line):
         line = AddDefaultIpAddress.transform(line)
-
     elif WithIPv6Address.filter(line):
         line = RemoveIPv6Address.transform(line)
 
     try:
         log, status = ToJSON.transform(line)
         resource = log['request']['resource']
-
-    # TODO: add specific exception
-    except:
-        log = {
-            LABEL_VALUE: line,
-            LABEL_CONTENT: LABEL_CONTENT_ERROR
-        }
+    except Exception as e:
+        log = {LABEL_VALUE: line, LABEL_CONTENT: LABEL_CONTENT_ERROR}
         try:
             AddTimestamp.transform(log, line)
-            InfluxDbForwarder.forward(log, line)
-        except: # TODO: add specific exception
-            pass
-
+        except Exception as e:
+            print(f"Error processing log: {e}")
         stats[LABEL_CONTENT] = LABEL_CONTENT_ERROR
-        return stats
+        return log, stats
 
     AddLabel.transform(log, LABEL_CONTENT, LABEL_CONTENT_OK if status == 0 else LABEL_CONTENT_DIFFERENT)
 
@@ -61,37 +56,47 @@ def process_log(line: str) -> dict:
         AddResourceIdLabel.transform(log, resource)
         AddLabel.transform(log, LABEL_TYPE, LABEL_TYPE_RESOURCE)
         stats[LABEL_TYPE] = LABEL_TYPE_RESOURCE
-
     elif AccessResourceBitstream.filter(resource):
         AddLabel.transform(log, LABEL_TYPE, LABEL_TYPE_RESOURCE)
         stats[LABEL_TYPE] = LABEL_TYPE_RESOURCE
-
     elif WebResource.filter(resource):
         stats[LABEL_TYPE] = LABEL_TYPE_RESOURCE_WEB
-        return stats
-
+        log[LABEL_TYPE] = LABEL_TYPE_RESOURCE_WEB
+        return log, stats
     elif SearchResource.filter(resource):
         AddLabel.transform(log, LABEL_TYPE, LABEL_TYPE_SEARCH)
         stats[LABEL_TYPE] = LABEL_TYPE_SEARCH
-
     else:
         AddLabel.transform(log, LABEL_TYPE, LABEL_TYPE_OTHERS)
         stats[LABEL_TYPE] = LABEL_TYPE_OTHERS
 
-    status = InfluxDbForwarder.forward(log, line)
-    if status == -1:
-        stats[LABEL_CONTENT] = LABEL_CONTENT_ERROR
+    log[LABEL_TYPE] = stats[LABEL_TYPE]
+    return log, stats
 
-    return stats
+def process_logs_for_date(year: int, month: int, day: int, folder: Path, batch: list, monthly_stats: dict) -> int:
+    log_file = folder / Path(f'anon_upc_access_log.{year}-{month:02}-{day:02}.txt.gz')
+    if not log_file.exists():
+        return 0
 
+    print(f'Processing anon_upc_access_log.{year}-{month:02}-{day:02}...')
+    with gzip.open(log_file, mode='rt', encoding='utf-8', errors='ignore') as file:
+        logs = file.readlines()
+        for log in logs:
+            processed_log, stats = process_log(log)
+            batch.append((processed_log, log))
+            if len(batch) >= BATCH_SIZE:
+                LokiForwarder.forward_batch(batch)
+                batch.clear()
+            if LABEL_CONTENT in stats:
+                monthly_stats[LABEL_CONTENT_ERROR] += 1
+            else:
+                monthly_stats[stats[LABEL_TYPE]] += 1
+    return len(logs)
 
-year = 2011
-input_path = os.environ.get('LOGS_OUTPUT_PATH')
-
-for month in range(1, 13):
-
-    totalLogs = 0
-    global_stats = {
+batch = []
+for year in range(YEAR_START, YEAR_END + 1):
+    yearly_stats = {
+        'year': year,
         'total_logs': 0,
         LABEL_TYPE_RESOURCE: 0,
         LABEL_TYPE_SEARCH: 0,
@@ -100,35 +105,36 @@ for month in range(1, 13):
         LABEL_CONTENT_ERROR: 0,
         'time': 0.0
     }
-    start_time = time.time()
-
-    folder = Path(input_path) / Path(str(year)) / Path(f'{month:02}')
-
-    for day in range(1, 32):
-
-        log_file = folder / Path(f'{year}-{month:02}-{day:02}.log')
-
-        if log_file.exists():
-
-            print(f'{year}-{month:02}-{day:02}.log ...')
-
-            with open(log_file, mode='rb') as file:
-                logs = file.readlines()
-                totalLogs = totalLogs + len(logs)
-
-                for log in logs:
-                    stats = process_log(log.decode('utf-8', errors='ignore'))
-
-                    if LABEL_CONTENT in stats:
-                        global_stats[LABEL_CONTENT_ERROR] += 1
-                    else:
-                        global_stats[stats[LABEL_TYPE]] += 1
-
-    end_time = time.time()
-    global_stats['total_logs'] = totalLogs
-    global_stats['time'] = end_time - start_time
-
-    print(json.dumps(global_stats, indent=4))
-
-
-InfluxDbForwarder.close()
+    for month in range(1, 13):
+        total_logs = 0
+        monthly_stats = {
+            'year': year,
+            'month': month,
+            'total_logs': 0,
+            LABEL_TYPE_RESOURCE: 0,
+            LABEL_TYPE_SEARCH: 0,
+            LABEL_TYPE_RESOURCE_WEB: 0,
+            LABEL_TYPE_OTHERS: 0,
+            LABEL_CONTENT_ERROR: 0,
+            'time': 0.0
+        }
+        start_time = time.time()
+        folder = Path(INPUT_PATH)
+        for day in range(1, 32):
+            total_logs += process_logs_for_date(year, month, day, folder, batch, monthly_stats)
+        if batch:
+            LokiForwarder.forward_batch(batch)
+            batch.clear()
+        end_time = time.time()
+        monthly_stats['total_logs'] = total_logs
+        monthly_stats['time'] = (end_time - start_time) / 60
+        yearly_stats['total_logs'] += total_logs
+        yearly_stats[LABEL_TYPE_RESOURCE] += monthly_stats[LABEL_TYPE_RESOURCE]
+        yearly_stats[LABEL_TYPE_SEARCH] += monthly_stats[LABEL_TYPE_SEARCH]
+        yearly_stats[LABEL_TYPE_RESOURCE_WEB] += monthly_stats[LABEL_TYPE_RESOURCE_WEB]
+        yearly_stats[LABEL_TYPE_OTHERS] += monthly_stats[LABEL_TYPE_OTHERS]
+        yearly_stats[LABEL_CONTENT_ERROR] += monthly_stats[LABEL_CONTENT_ERROR]
+        yearly_stats['time'] += monthly_stats['time']
+        print(json.dumps(monthly_stats, indent=4))
+    print(json.dumps(yearly_stats, indent=4))
+LokiForwarder.close()
