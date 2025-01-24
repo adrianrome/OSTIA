@@ -29,9 +29,7 @@ Key features include:
 │   └── workflows/
 ├── config/
 │   ├── loki/
-│   ├── mongo/
-│   └── nginx/
-│       └── certificates/
+│   └── mongo/
 ├── docs/
 │   └── source/
 ├── src/
@@ -50,7 +48,9 @@ Key features include:
 │       └── utils/
 └── test/
     ├── logs/
+    │   └── filter/
     └── metadata/
+        └── filter/
 </pre>
 
 ## Built With
@@ -62,7 +62,6 @@ Key features include:
 [![GitHub][github]][github-url]
 [![Grafana][grafana]][grafana-url]
 [![MongoDB][mongodb]][mongodb-url]
-[![Nginx][nginx]][nginx-url]
 [![Python][python]][python-url]
 
 ## License
@@ -99,8 +98,6 @@ Adrián Romera González
 [linkedin-url]: https://www.linkedin.com/in/aromerag/
 [mongodb]: https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=fff&style=for-the-badge
 [mongodb-url]: https://www.mongodb.com/
-[nginx]: https://img.shields.io/badge/NGINX-009639?logo=nginx&logoColor=fff&style=for-the-badge
-[nginx-url]: https://nginx.org/
 [python]: https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff&style=for-the-badge
 [python-url]: https://www.python.org/
 [stars-shield]: https://img.shields.io/github/stars/adrianrome/OSTIA.svg?style=flat
