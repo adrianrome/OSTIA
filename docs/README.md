@@ -7,7 +7,7 @@
 
 # Step 1: Create a virtual environment named 'venv'.
 ```shell
-python -m venv ./venv
+python3 -m venv ./venv
 ```
 
 # Step 2: Activate the virtual environment:
