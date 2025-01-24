@@ -30,4 +30,3 @@ exclude_patterns = []  # Patterns to exclude files/directories from the document
 # Documentation: https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'  # Specifies the HTML theme. 'sphinx_rtd_theme' is widely used.
-html_static_path = ['_static']  # Path to custom static files (e.g., CSS, JavaScript).

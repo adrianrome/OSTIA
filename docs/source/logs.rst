@@ -10,7 +10,7 @@ DoubleClick
 
 .. autofunction:: src.logs.counter.double_click.DoubleClick._clean_old_entries
 
-DoubleClick
+RobotsCrawlers
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: src.logs.counter.robots_crawlers.RobotsCrawlers._download_robots_list
 
@@ -81,7 +81,7 @@ Transformer
 -----------
 
 AddBitstreamResourceIdLabel
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: src.logs.transformer.add_bitstream_resource_id_label.AddBitstreamResourceIdLabel.transform
 
 AddDefaultIpAddress
@@ -116,7 +116,7 @@ ToJSON
 
 ITransformer
 ~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: src.logs.transformer.transformer_interface.ITransformer.transform
+.. autofunction:: src.logs.transformer.transformer_interface.ITransformer
 
 Utils
 -----------

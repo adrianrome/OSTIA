@@ -35,7 +35,7 @@ class RobotsCrawlers(IFilter):
     def _download_robots_list(cls):
         """
         Downloads the COUNTER Robots list from a remote source and updates the `counter_robots_list` attribute.
-
+        
         This method fetches a text file containing a list of known bot user agents and splits it into a list of strings.
         """
         # Check if the list is empty to avoid redundant downloads.

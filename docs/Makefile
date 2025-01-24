@@ -4,10 +4,10 @@
 # Variables:
 # These can be set from the command line or environment to customize behavior.
 
-SPHINXOPTS    ?=        # Additional options passed to the Sphinx build command. Can be set externally.
-SPHINXBUILD   ?= sphinx-build  # Command to run the Sphinx build tool. Defaults to 'sphinx-build'.
-SOURCEDIR     = source  # Directory containing the source files for the documentation.
-BUILDDIR      = build   # Directory where the output (e.g., HTML, PDF) will be generated.
+SPHINXOPTS    ?=# Additional options passed to the Sphinx build command. Can be set externally.
+SPHINXBUILD   ?= sphinx-build# Command to run the Sphinx build tool. Defaults to 'sphinx-build'.
+SOURCEDIR     = source# Directory containing the source files for the documentation.
+BUILDDIR      = build# Directory where the output (e.g., HTML, PDF) will be generated.
 
 # Default target:
 # The 'help' target provides information about available Sphinx build options.
