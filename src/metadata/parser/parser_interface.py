@@ -1,19 +1,31 @@
-from abc import ABC, abstractmethod
-
+from abc import ABC, abstractmethod  # Import ABC and abstractmethod to define an abstract base class.
 
 class IParser(ABC):
+    """
+    An abstract base class (ABC) that defines the interface for metadata parsers.
+
+    This interface ensures that all parser classes implement the `parse` method to
+    standardize how metadata is processed and transformed.
+
+    Methods:
+        parse(metadata: dict) -> list[dict]:
+            Abstract method to parse metadata into a structured format.
+    """
 
     @abstractmethod
     def parse(cls, metadata: dict) -> list[dict]:
         """
-        Abstract method to parse a verbose metadata into a specific format.
+        Parses the provided metadata into a standardized format.
 
-        Subclasses must implement this method to provide specific parsing logic.
+        Args:
+            metadata (dict): A dictionary containing metadata to be processed. 
+                The structure and keys of this dictionary will depend on the implementation.
 
-        :param metadata: The metadata entry to be parsed.
-        :type metadata: dict
-        :return: List of the metadata values parsed in the specified format.
-        :rtype: list[dict]
-        :raises NotImplementedError: If the method is not implemented by a subclass.
+        Returns:
+            list[dict]: A list of dictionaries representing the parsed metadata.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
-        raise NotImplementedError("Subclasses must implement this method")
+        # Raise an error to enforce implementation in subclasses.
+        raise NotImplementedError(f"{cls.__name__} must implement the 'parse' method.")

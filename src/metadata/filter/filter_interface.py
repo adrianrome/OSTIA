@@ -1,19 +1,30 @@
-from abc import ABC, abstractmethod
-
+from abc import ABC, abstractmethod  # Import ABC and abstractmethod to define an abstract base class.
 
 class IFilter(ABC):
+    """
+    An abstract base class (ABC) that defines the interface for filters.
+
+    Classes inheriting from `IFilter` must implement the `filter` method. 
+    This interface is used to ensure consistency across all filter implementations.
+
+    Methods:
+        filter(record: dict) -> bool:
+            Abstract method that subclasses must override to define the filtering logic.
+    """
 
     @abstractmethod
     def filter(cls, record: dict) -> bool:
         """
-        Abstract method to determine if a given metadata entry matches certain criteria.
+        Abstract method to filter records based on custom criteria.
 
-        Subclasses must implement this method to provide specific filtering logic.
+        Args:
+            record (dict): A dictionary representing the record to be evaluated.
 
-        :param record: The record entry to be checked.
-        :type record: dict
-        :return: True if the metadata entry matches the criteria, False otherwise.
-        :rtype: bool
-        :raises NotImplementedError: If the method is not implemented by a subclass.
+        Returns:
+            bool: True if the record satisfies the filter criteria, False otherwise.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
-        raise NotImplementedError("Subclasses must implement this method")
+        # Raise an error to enforce implementation in subclasses.
+        raise NotImplementedError(f"{cls.__name__} must implement the 'filter' method.")

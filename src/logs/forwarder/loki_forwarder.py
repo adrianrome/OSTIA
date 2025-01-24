@@ -1,118 +1,171 @@
-from src.logs.forwarder.forwarder_interface import IForwarder
-from src.logs.utils.date_converter import to_nanoseconds
-
-import os
-import requests
-import json
-from typing import List
-
+from requests.adapters import HTTPAdapter  # For managing retries and mounting HTTP requests.
+from src.logs.forwarder.forwarder_interface import IForwarder  # Import the abstract forwarder interface.
+from src.logs.utils.date_converter import to_nanoseconds  # Utility function to convert date and time to nanoseconds.
+from typing import List, Tuple, Dict  # Type hints for list, tuple, and dictionary.
+from urllib3.util.retry import Retry  # Retry mechanism for HTTP requests.
+import json  # JSON handling for encoding logs.
+import os  # For accessing environment variables.
+import requests  # For sending HTTP requests.
 
 class LokiForwarder(IForwarder):
-    loki_url: str | None = None
+    """
+    A class for forwarding logs to a Loki instance.
 
-    previous_timestamp: int = 0
-    previous_date: tuple[str, str] = ('', '')
+    Attributes:
+        loki_url (str | None): The base URL of the Loki service.
+        batch (List[Tuple[Dict, str]]): A batch of logs to be forwarded.
+        BATCH_SIZE (int): The maximum number of logs in a batch before sending.
+        previous_timestamp (int): Tracks the last used timestamp in nanoseconds.
+        previous_date (Tuple[str, str]): Tracks the last processed date and time.
+
+    Methods:
+        forward(log: dict, raw_log: str) -> int:
+            Adds a log entry to the batch and forwards it if the batch is full.
+        forward_batch() -> int:
+            Processes and sends the current batch of logs to Loki.
+        close() -> None:
+            Forwards any remaining logs in the batch.
+        _set_log_tags(log: dict) -> dict:
+            Generates a dictionary of tags for a log entry.
+        _ensure_loki_url() -> None:
+            Ensures the Loki URL is set, raising an error if not.
+        _set_timestamp(date: str, time: str) -> int:
+            Converts a date and time to nanoseconds, ensuring unique timestamps.
+    """
+
+    loki_url: str | None = None  # Loki instance URL, set dynamically or from the environment.
+    batch: List[Tuple[Dict, str]] = []  # A list to hold log entries and their raw strings.
+    BATCH_SIZE = 500  # Maximum number of logs in a batch.
+    previous_timestamp: int = 0  # Tracks the previous log's timestamp in nanoseconds.
+    previous_date: Tuple[str, str] = ('', '')  # Tracks the previous log's date and time.
 
     @classmethod
-    def forward_batch(cls, batch: List[tuple[dict, str]]) -> int:
+    def forward(cls, log: dict, raw_log: str) -> int:
         """
-        Forwards a batch of log entries to Loki.
+        Adds a log entry to the batch and sends the batch if it reaches the defined size.
 
-        :param batch: A list of tuples containing the processed log entry and the raw log entry.
-        :type batch: List[tuple[dict, str]]
-        :return: Status code of the action.
-        :rtype: int
+        Args:
+            log (dict): A dictionary containing structured log data.
+            raw_log (str): The raw log string.
+
+        Returns:
+            int: 0 if the batch is not full, 1 if there was an error during forwarding.
         """
+        cls.batch.append((log, raw_log))  # Add the log entry to the batch.
+        return cls.forward_batch() if len(cls.batch) >= cls.BATCH_SIZE else 0
 
-        cls._ensure_loki_url()
+    @classmethod
+    def forward_batch(cls) -> int:
+        """
+        Processes and sends the current batch of logs to Loki.
 
-        streams = []
-        for log, raw_log in batch:
-            try:
-                time = cls._set_timestamp(log['date'], log['time'])
-            except:
-                continue
+        Returns:
+            int: 0 if the batch was successfully forwarded, 1 otherwise.
+        """
+        cls._ensure_loki_url()  # Ensure the Loki URL is set.
 
-            log_entry = {
-                "log": raw_log,
-                "recurs": log.get("resource") if log.get("type") == "recurs" else None
-            }
-            
-            log_entry_str = json.dumps(log_entry)
+        try:
+            # Create log streams with associated tags and values.
+            streams = [
+                {
+                    'stream': cls._set_log_tags(log),
+                    'values': [[
+                        str(cls._set_timestamp(log['date'], log['time'])),
+                        json.dumps({
+                            "log": raw_log,
+                            **({"recurs": log.get("resource")} if log.get("type") in ["recurs", "recurs-bitstream"] else {})
+                        })
+                    ]]
+                }
+                for log, raw_log in cls.batch
+            ]
+        except Exception as e:
+            print(f"Error processing batch: {e}")
+            return 1
 
-            streams.append({
-                'stream': cls._set_log_tags(log),
-                'values': [[str(time), log_entry_str]]
-            })
+        # Configure HTTP session with retries.
+        session = requests.Session()
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
 
-        data = {'streams': streams}
+        try:
+            # Send the batch to Loki.
+            response = session.post(f"{cls.loki_url}/loki/api/v1/push", json={'streams': streams})
+            if response.status_code != 204:
+                print(f"Status code: {response.status_code}, Response: {response.content.decode('utf-8')}")
+                return 1
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending logs to Loki: {e}")
+            return 1
 
-        response = requests.post(f"{cls.loki_url}/loki/api/v1/push", json=data)
-        return response.status_code
+        cls.batch.clear()  # Clear the batch after successful forwarding.
+        return 0
 
     @classmethod
     def close(cls) -> None:
         """
-        Close the *Loki* handler.
-
-        :return: None
+        Forwards any remaining logs in the batch before shutting down.
         """
-        pass
+        if cls.batch:  # Check if there are logs left in the batch.
+            cls.forward_batch()
 
     @staticmethod
     def _set_log_tags(log: dict) -> dict:
         """
-        Defines the *Loki* tags based on the content of the log entry.
+        Generates a dictionary of tags for a log entry.
 
-        :param log: The log entry, represented as a dictionary.
-        :type log: dict
-        :return: A dictionary with the specific tags.
-        :rtype: dict
+        Args:
+            log (dict): The structured log data.
+
+        Returns:
+            dict: A dictionary of tags based on the log's content.
         """
-        if log['content'] == "error":
-            return {'content': "error"}
-        else:
-            return {
-                'service_name': 'log-upcommons',
-                'content': log['content'],
-                'method': log['request']['method'],
-                'status_code': log['request']['status_code'],
-                'type': log['type']            
-            }
+        tags = {'service_name': 'log-upcommons', 'content': log['content']}  # Base tags.
+        if log['content'] == "error":  # Special case for error logs.
+            return tags
+
+        # Add additional tags for non-error logs.
+        tags.update({
+            'method': log['request']['method'],
+            'referer': log['referer'],
+            'status_code': log['request']['status_code'],
+            'type': log['type'],
+        })
+
+        # Add optional keys if they exist in the log.
+        optional_keys = ['language', 'type_recurs', 'access']
+        tags.update({key: log[key] for key in optional_keys if key in log})
+        return tags
 
     @classmethod
     def _ensure_loki_url(cls) -> None:
         """
-        Ensures that the Loki URL is set.
+        Ensures the Loki URL is set, retrieving it from the environment if necessary.
 
-        :return: None
+        Raises:
+            ValueError: If the Loki URL is not set.
         """
-        if cls.loki_url is None:
-            cls.loki_url = os.environ.get('LOKI_URL')
-            if cls.loki_url is None:
-                raise ValueError("LOKI_URL environment variable is not set")
+        if not cls.loki_url:
+            cls.loki_url = os.environ.get('LOKI_URL') or \
+                ValueError("LOKI_URL environment variable is not set")
 
     @classmethod
     def _set_timestamp(cls, date: str, time: str) -> int:
         """
-        Converts the date, time pair in to a UNIX timestamp.
+        Converts a date and time to nanoseconds, ensuring unique timestamps.
 
-        At every collision with *previous_timestamp* one second is added.
+        Args:
+            date (str): The date string.
+            time (str): The time string.
 
-        :param date: Date in dd-mm-yyyy format.
-        :type date: str
-        :param time: Time in hh:mm:ss z format.
-        :type time: str
-        :return: Timestamp of the <date,time> pair.
-        :rtype: int
+        Returns:
+            int: A timestamp in nanoseconds.
         """
-
-        ts = to_nanoseconds(date, time)
-
         if (date, time) == cls.previous_date:
-            ts = cls.previous_timestamp = cls.previous_timestamp + 1
+            cls.previous_timestamp += 1  # Increment the timestamp to ensure uniqueness.
         else:
-            cls.previous_timestamp = ts
-
-        cls.previous_date = (date, time)
-        return ts
+            cls.previous_timestamp = to_nanoseconds(date, time)  # Convert to nanoseconds.
+            cls.previous_date = (date, time)  # Update the previous date and time.
+        return cls.previous_timestamp

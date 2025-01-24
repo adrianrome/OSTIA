@@ -1,55 +1,63 @@
-auth_enabled: false
+# Main configuration for the application.
+
+auth_enabled: false  # Specifies whether authentication is enabled. 'false' means no authentication is required.
 
 server:
-  http_listen_port: 3100
-  grpc_listen_port: 9096
+  http_listen_port: 3100  # The port where the HTTP server listens for incoming connections.
+  grpc_listen_port: 9096  # The port for gRPC server connections.
 
 common:
-  instance_addr: 127.0.0.1
-  path_prefix: /tmp/loki
+  instance_addr: 127.0.0.1  # The address used by this instance.
+  path_prefix: /tmp/loki  # Directory prefix for storing data files.
   storage:
     filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-  replication_factor: 1
+      chunks_directory: /tmp/loki/chunks  # Directory where chunk files are stored.
+      rules_directory: /tmp/loki/rules  # Directory for storing rule files.
+  replication_factor: 1  # Number of replicas for data replication (useful in distributed systems).
   ring:
     kvstore:
-      store: inmemory
+      store: inmemory  # Key-value store type. 'inmemory' indicates in-memory storage for the ring.
 
 query_range:
   results_cache:
     cache:
       embedded_cache:
-        enabled: true
-        max_size_mb: 100
+        enabled: true  # Enables or disables the embedded results cache.
+        max_size_mb: 100  # Maximum cache size in megabytes.
 
 schema_config:
   configs:
-    - from: 2006-01-01
-      store: tsdb
-      object_store: filesystem
-      schema: v13
+    - from: 2006-01-01  # Date from which this configuration becomes effective.
+      store: tsdb  # The type of storage backend (Time Series Database in this case).
+      object_store: filesystem  # Specifies the object store type. Here, it uses the filesystem.
+      schema: v13  # Version of the schema used for indexing and storage.
       index:
-        prefix: index_
-        period: 24h
+        prefix: index_  # Prefix for the index file names.
+        period: 24h  # Duration for each index period (e.g., daily indexing).
+
+ingester:
+  chunk_idle_period: 1m  # Idle period before a chunk is flushed to storage.
+  chunk_target_size: 524288  # Target size (in bytes) for chunks before flushing.
 
 ruler:
-  alertmanager_url: http://localhost:9093
+  alertmanager_url: http://localhost:9093  # URL of the Alertmanager for sending alerts.
 
 limits_config:
-  reject_old_samples: false
-  max_query_length: 0
-  max_entries_limit_per_query: 1000000000000
+  reject_old_samples: false  # Whether to reject old samples during ingestion.
+  max_query_length: 0  # Maximum allowed query length (0 for no limit).
+  max_entries_limit_per_query: 1000000000000  # Maximum number of entries allowed per query.
+  ingestion_rate_mb: 100  # Rate of ingestion allowed in megabytes per second.
+  ingestion_burst_size_mb: 200  # Burst size allowed during ingestion in megabytes.
 
 # By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
 # analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
 #
 # Statistics help us better understand how Loki is used, and they show us performance
 # levels for most users. This helps us prioritize features and documentation.
-# For more information on what's sent, look at
+# For more information on what's sent, look at:
 # https://github.com/grafana/loki/blob/main/pkg/analytics/stats.go
 # Refer to the buildReport method to see what goes into a report.
 #
 # If you would like to disable reporting, uncomment the following lines:
 #analytics:
-#  reporting_enabled: false
+#  reporting_enabled: false  # Disables analytics reporting if set to 'false'.

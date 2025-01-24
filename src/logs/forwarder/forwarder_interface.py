@@ -1,23 +1,30 @@
-from abc import ABC, abstractmethod
-
+from abc import ABC, abstractmethod  # Import ABC and abstractmethod for defining abstract base classes.
 
 class IForwarder(ABC):
+    """
+    An abstract base class (ABC) that defines the interface for log forwarders.
 
-    # TODO: replace int by Response class
+    Classes inheriting from `IForwarder` must implement the `forward` method.
+
+    Methods:
+        forward(log: dict, raw_log: str) -> int:
+            Abstract method to forward log data. Must be implemented by subclasses.
+    """
 
     @abstractmethod
     def forward(cls, log: dict, raw_log: str) -> int:
         """
-        Abstract method to define the log forwarding process.
+        Abstract method that subclasses must override to define how logs are forwarded.
 
-        Subclasses must implement this method to provide specific support for specific storage solutions.
+        Args:
+            log (dict): A dictionary containing parsed log data.
+            raw_log (str): The raw log string before parsing.
 
-        :param log: The processed log entry to be forwarded, represented as a dictionary.
-        :type log: dict
-        :param raw_log: The log entry to be checked.
-        :type raw_log: str
-        :return: Status code of the log forwarding action.
-        :rtype: int
-        :raises NotImplementedError: If the method is not implemented by a subclass.
+        Returns:
+            int: The status code indicating the result of the forwarding operation.
+
+        Raises:
+            NotImplementedError: If the method is not implemented in a subclass.
         """
+        # Raise an error to enforce implementation in subclasses.
         raise NotImplementedError("Subclasses must implement this method")

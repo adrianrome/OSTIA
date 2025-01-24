@@ -1,0 +1,753 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 2,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"apren.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"futur.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"discovery.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"sso.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "blue",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"atenea.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{referer=\"drac.upc.edu\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "purple",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "loki",
+                        "uid": "P8E80F9AEF21F6940"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum by(referer) (\r\n  count_over_time({referer=~\"^(apren|futur|discovery|atenea|sso|drac|bibliotecnia).upc.edu$\"}[$__auto])\r\n)",
+                    "queryType": "range",
+                    "refId": "A",
+                    "step": "1d"
+                }
+            ],
+            "title": "Evolució del trànsit procedent de la UPC agrupat per domini ",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "__systemRef": "hideSeriesFrom",
+                        "matcher": {
+                            "id": "byNames",
+                            "options": {
+                                "mode": "exclude",
+                                "names": [
+                                    "{type_recurs=\"Agreement\"}",
+                                    "{type_recurs=\"Altres\"}",
+                                    "{type_recurs=\"Article\"}",
+                                    "{type_recurs=\"Audiovisual\"}",
+                                    "{type_recurs=\"Bachelor thesis\"}",
+                                    "{type_recurs=\"Book\"}",
+                                    "{type_recurs=\"Collaborative project\"}",
+                                    "{type_recurs=\"Conference lecture\"}",
+                                    "{type_recurs=\"Conference report\"}",
+                                    "{type_recurs=\"Contribution to periodical\"}",
+                                    "{type_recurs=\"Course description\"}",
+                                    "{type_recurs=\"Coursework\"}",
+                                    "{type_recurs=\"Dataset\"}",
+                                    "{type_recurs=\"Diploma final work\"}",
+                                    "{type_recurs=\"Doctoral thesis\"}",
+                                    "{type_recurs=\"Exam\"}",
+                                    "{type_recurs=\"External research report\"}",
+                                    "{type_recurs=\"File\"}",
+                                    "{type_recurs=\"Guia docent\"}",
+                                    "{type_recurs=\"Guide\"}",
+                                    "{type_recurs=\"Image\"}",
+                                    "{type_recurs=\"Imatge\"}",
+                                    "{type_recurs=\"Institutional publication\"}",
+                                    "{type_recurs=\"Internal report\"}",
+                                    "{type_recurs=\"Journal\"}",
+                                    "{type_recurs=\"Lecture\"}",
+                                    "{type_recurs=\"Lecture notes\"}",
+                                    "{type_recurs=\"Manual\"}",
+                                    "{type_recurs=\"Map\"}",
+                                    "{type_recurs=\"Master thesis\"}",
+                                    "{type_recurs=\"Master thesis (pre-Bologna period)\"}",
+                                    "{type_recurs=\"Memorandum\"}",
+                                    "{type_recurs=\"Minor thesis\"}",
+                                    "{type_recurs=\"Nautical chart\"}",
+                                    "{type_recurs=\"Other\"}",
+                                    "{type_recurs=\"Part of book or chapter of book\"}",
+                                    "{type_recurs=\"Plan\"}",
+                                    "{type_recurs=\"Poster\"}",
+                                    "{type_recurs=\"Postgraduate master thesis\"}",
+                                    "{type_recurs=\"Practical exercise\"}",
+                                    "{type_recurs=\"Practice\"}",
+                                    "{type_recurs=\"Problem statement, exercise\"}",
+                                    "{type_recurs=\"Projecte/Treball Final de Carrera\"}",
+                                    "{type_recurs=\"Public budget\"}",
+                                    "{type_recurs=\"Recognition of foreign diploma\"}",
+                                    "{type_recurs=\"Report\"}",
+                                    "{type_recurs=\"Review\"}",
+                                    "{type_recurs=\"Software\"}",
+                                    "{type_recurs=\"Sound\"}",
+                                    "{type_recurs=\"Study\"}",
+                                    "{type_recurs=\"Subject guide\"}",
+                                    "{type_recurs=\"Syllabus\"}",
+                                    "{type_recurs=\"Tutored research work\"}",
+                                    "{type_recurs=\"UPC Master thesis\"}",
+                                    "{type_recurs=\"Website\"}",
+                                    "{type_recurs=\"Working paper\"}",
+                                    "{type_recurs=\"[\\\"Article\\\", \\\"Article\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Bachelor thesis\\\", \\\"Collaborative project\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Conference lecture\\\", \\\"Conference report\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Doctoral thesis\\\", \\\"Doctoral thesis\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Lecture notes\\\", \\\"Coursework\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Lecture notes\\\", \\\"Other\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Lecture notes\\\", \\\"Practical exercise\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Lecture notes\\\", \\\"Practice\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Lecture notes\\\", \\\"Problem statement, exercise\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Problem statement, exercise\\\", \\\"Lecture notes\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Subject guide\\\", \\\"Subject guide\\\"]\"}",
+                                    "{type_recurs=\"other\"}",
+                                    "{type_recurs=\"List of services\"}",
+                                    "{type_recurs=\"Protocol\"}",
+                                    "{type_recurs=\"[\\\"Conference report\\\", \\\"Conference lecture\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Image\\\", \\\"Coursework\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Part of book or chapter of book\\\", \\\"Nautical chart\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Software\\\", \\\"Dataset\\\"]\"}",
+                                    "{type_recurs=\"[\\\"Sound\\\", \\\"Dataset\\\"]\"}",
+                                    "{type_recurs=\"Infografia\"}"
+                                ],
+                                "prefix": "All except:",
+                                "readOnly": true
+                            }
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.hideFrom",
+                                "value": {
+                                    "legend": false,
+                                    "tooltip": false,
+                                    "viz": true
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Exam\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Bachelor thesis\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Article\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Doctoral thesis\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Master thesis\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "blue",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Book\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "purple",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Conference report\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "#000000",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Image\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Lecture notes\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Audiovisual\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Conference lecture\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"External research report\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-blue",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{type_recurs=\"Problem statement, exercise\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-purple",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+                {
+                    "editorMode": "code",
+                    "expr": "sum by (type_recurs) (\r\n  count_over_time({type_recurs=~\"^(Exam|Bachelor thesis|Article|Doctoral thesis|Master thesis|Book|Conference report|Image|Lecture notes|Audiovisual|Conference lecture|External research report|Problem statement, exercise)$\"}[$__auto])\r\n)",
+                    "queryType": "range",
+                    "refId": "A",
+                    "step": "1d"
+                }
+            ],
+            "title": "Evolució del trànsit agrupat per col·lecció",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "loki",
+                "uid": "P8E80F9AEF21F6940"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{language=\"eng\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{language=\"spa\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "{language=\"cat\"}"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "11.4.0",
+            "targets": [
+                {
+                    "editorMode": "code",
+                    "expr": "sum by (language) (\r\n  count_over_time({language=~\"^(spa|eng|cat)$\"}[$__auto])\r\n)",
+                    "queryType": "range",
+                    "refId": "A",
+                    "step": "1d"
+                }
+            ],
+            "title": "Evolució del trànsit agrupat per idioma",
+            "type": "timeseries"
+        }
+    ],
+    "preload": false,
+    "schemaVersion": 40,
+    "tags": [],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "2022-12-31T23:00:00.000Z",
+        "to": "2023-12-31T22:59:59.000Z"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Evolució del trànsit",
+    "uid": "fea7clcvypzwgd",
+    "version": 12,
+    "weekStart": ""
+}

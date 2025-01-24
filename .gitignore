@@ -2,7 +2,7 @@
 *.log
 *.out
 *.png
-venv
 .idea/
 __pycache__/
 build/
+venv

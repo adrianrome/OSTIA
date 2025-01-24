@@ -1,51 +1,66 @@
+# Define the Docker networks.
 networks:
   monitoring:
+    # A custom network named 'monitoring' is created for inter-service communication.
 
-
+    # Define the services for the application.
 services:
+  # Loki service configuration.
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:latest # Use the latest version of the Grafana Loki image.
     ports:
-      - 3100:3100
+      - 3100:3100 # Map port 3100 on the host to port 3100 in the container (Loki's API endpoint).
     volumes:
-      - ./loki/loki-local-config.yaml:/etc/loki/local-config.yaml
-      - loki_data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
+      - ./loki/loki-local-config.yaml:/etc/loki/local-config.yaml # Mount the Loki configuration file.
+      - loki_data:/loki # Use a named volume for persistent data storage.
+    command: -config.file=/etc/loki/local-config.yaml # Specify the configuration file for Loki.
     networks:
-      - monitoring
+      - monitoring # Attach the service to the 'monitoring' network.
+
+  # Grafana service configuration.
   grafana:
     environment:
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning # Define the provisioning directory for Grafana.
     entrypoint:
-      - sh
-      - -euc
+      - sh # Use the shell to execute commands.
+      - -euc # Set shell options for error handling and uninitialized variables.
       - |
+        # Create the provisioning directory for Grafana data sources.
         mkdir -p /etc/grafana/provisioning/datasources
+        # Dynamically create a Grafana data source configuration file.
         cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
         apiVersion: 1
         datasources:
-        - name: Loki
-          type: loki
-          access: proxy 
-          orgId: 1
-          url: http://loki:3100
-          basicAuth: false
-          isDefault: true
-          version: 1
-          editable: false
-        - name: Infinity
-          type: infinity
+        - name: Loki  # Name of the data source.
+          type: loki  # Type of the data source (Loki).
+          access: proxy  # Access method for the data source.
+          orgId: 1  # Organization ID.
+          url: http://loki:3100  # URL to connect to the Loki service.
+          basicAuth: false  # Disable basic authentication.
+          isDefault: true  # Set this as the default data source.
+          version: 1  # Data source version.
+          editable: false  # Make the data source configuration read-only.
         EOF
-        /run.sh
-    image: grafana/grafana:latest
+        /run.sh  # Start the Grafana server.
+    image: grafana/grafana:latest # Use the latest version of the Grafana image.
     ports:
-      - 3000:3000
+      - 3000:3000 # Map port 3000 on the host to port 3000 in the container (Grafana web interface).
     volumes:
-      - /mnt/c/Users/arome/Documents/GitHub/OSTIA/metadata:/var/lib/grafana/json
+      - ./grafana/json:/etc/grafana/json # Mount the directory containing Grafana JSON files.
     networks:
-      - monitoring
+      - monitoring # Attach the service to the 'monitoring' network.
 
+  # MongoDB service configuration.
+  mongo:
+    image: mongo:4.4.6 # Use version 4.4.6 of the MongoDB image.
+    ports:
+      - 27017:27017 # Map port 27017 on the host to port 27017 in the container (MongoDB service port).
+    restart: always # Always restart the container if it stops or crashes.
+    env_file:
+      - ./mongo/mongo.env # Load environment variables from an external file.
+    networks:
+      - monitoring # Attach the service to the 'monitoring' network.
+
+# Define named volumes for persistent storage.
 volumes:
-  loki_data:
+  loki_data: # A named volume for storing Loki's persistent data.
